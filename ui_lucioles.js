@@ -100,9 +100,7 @@ function get_samples(path_on_node, serie, wh){
     // serie => for choosing chart/serie on the page
     // wh => which esp do we want to query data
     
-    node_url = 'http://localhost:3000'
-    //node_url = 'http://134.59.131.45:3000'
-    //node_url = 'http://192.168.1.101:3000'
+    node_url = 'http://localhost:'+ process.env.PORT || 3004
 
     //https://openclassrooms.com/fr/courses/1567926-un-site-web-dynamique-avec-jquery/1569648-le-fonctionnement-de-ajax
     $.ajax({
