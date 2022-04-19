@@ -16,11 +16,6 @@ const TOPIC_TEMP  = 'sensors/temp'
 
 const port = process.env.PORT || 3006
 
-//sauvegarder le port utilisé pour le front end
-fs.writeFileSync('port.json',JSON.stringify({
-	port : port
-}))
-
 const passwordMongoDb = process.env.DBPWD
 
 //---  The MongoDB module exports MongoClient, and that's what
