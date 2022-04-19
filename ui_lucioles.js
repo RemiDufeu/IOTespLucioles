@@ -5,7 +5,12 @@
 // RMQ : Manipulation naive (debutant) de Javascript
 //
 
-function init() {
+let port = 3004
+
+async function init() {
+
+    port = await getPort()
+
     //=== Initialisation des traces/charts de la page html ===
     // Apply time settings globally
     Highcharts.setOptions({
@@ -100,7 +105,9 @@ function get_samples(path_on_node, serie, wh){
     // serie => for choosing chart/serie on the page
     // wh => which esp do we want to query data
     
-    node_url = 'http://localhost:'+ process.env.PORT || 3004
+    const node_url = 'http://localhost:'+ port
+
+    console.log(node_url)
 
     //https://openclassrooms.com/fr/courses/1567926-un-site-web-dynamique-avec-jquery/1569648-le-fonctionnement-de-ajax
     $.ajax({
@@ -121,6 +128,19 @@ function get_samples(path_on_node, serie, wh){
         complete: function (resultat, statut) {
         }
     });
+}
+
+const getPort = async () => {
+    let dataPort = await fetch('port.json',{
+        mode: 'cors',
+        headers : {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin' : '*',
+        }
+    })
+    .then(response => response.json())
+    .then(data => data.port)
+    return dataPort
 }
 
 

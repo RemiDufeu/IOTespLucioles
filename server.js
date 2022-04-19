@@ -1,5 +1,6 @@
 // Importation des modules
 var path = require('path');
+const fs = require('fs');
 
 //charger le mdp en fichier .env
 require('dotenv').config()
@@ -13,9 +14,14 @@ const mqtt = require('mqtt')
 const TOPIC_LIGHT = 'sensors/light'
 const TOPIC_TEMP  = 'sensors/temp'
 
-const port = process.env.PORT || 3004
+const port = process.env.PORT || 3006
+
+//sauvegarder le port utilisé pour le front end
+fs.writeFileSync('port.json',JSON.stringify({
+	port : port
+}))
+
 const passwordMongoDb = process.env.DBPWD
-console.log("mdp : "+passwordMongoDb)
 
 //---  The MongoDB module exports MongoClient, and that's what
 // we'll use to connect to a MongoDB database.
