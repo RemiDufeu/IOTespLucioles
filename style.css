@@ -1,0 +1,52 @@
+body {
+    background-color: rgb(75, 75, 75);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: rgb(248, 248, 248);
+    margin: 0;
+    padding: 0;
+}
+
+#topbar {
+    display: flex;
+    padding: 10px 35px;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgb(49, 49, 49);
+    box-shadow: -1px -6px 20px 0px black;
+}
+
+ #title {
+     font-size: 35px;
+     font-weight: 500;
+ }
+
+ #topbar a {
+     text-decoration: none;
+     font-size: larger;
+     padding: 0 25px;
+     font-weight: 400;
+     color: inherit;
+ }
+
+ #topbar a:hover {
+     opacity: 0.9;
+     font-weight: 500;
+ }
+
+ .containerList {
+     max-width: 950px;
+     margin: auto;
+     
+     padding: 20px 0;
+ }
+
+ .card {
+    border: 1px solid gray;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-size: larger;
+    padding: 15px;
+ }
+
+ #map { height: calc(100vh - 67px); }

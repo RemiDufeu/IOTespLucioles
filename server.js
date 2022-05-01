@@ -13,6 +13,7 @@ const mqtt = require('mqtt')
 // Topics MQTT
 const TOPIC_LIGHT = 'sensors/light'
 const TOPIC_TEMP  = 'sensors/temp'
+const TOPIC_VALIDATION = 'iot/M1Miage2022'
 
 const port = process.env.PORT || 3006
 
@@ -23,7 +24,7 @@ const passwordMongoDb = process.env.DBPWD
 // We can use an instance of MongoClient to connect to a cluster,
 // access the database in that cluster,
 // and close the connection to that cluster.
-const {MongoClient} = require('mongodb');
+const {MongoClient, ObjectId} = require('mongodb');
 
 //----------------------------------------------------------------
 // This function will retrieve a list of databases in our cluster and
@@ -90,18 +91,25 @@ async function v0(){
 	// Des la connexion, le serveur NodeJS s'abonne aux topics MQTT 
 	//
 	client_mqtt.on('connect', function () {
+		
 	    client_mqtt.subscribe(TOPIC_LIGHT, function (err) {
 		if (!err) {
 		    //client_mqtt.publish(TOPIC_LIGHT, 'Hello mqtt')
 		    console.log('Node Server has subscribed to ', TOPIC_LIGHT);
 		}
 	    })
-	    client_mqtt.subscribe(TOPIC_TEMP, function (err) {
+	   /client_mqtt.subscribe(TOPIC_TEMP, function (err) {
 		if (!err) {
 		    //client_mqtt.publish(TOPIC_TEMP, 'Hello mqtt')
 		    console.log('Node Server has subscribed to ', TOPIC_TEMP);
 		}
 	    })
+		client_mqtt.subscribe(TOPIC_VALIDATION, function (err) {
+			if (!err) {
+				//client_mqtt.publish(TOPIC_TEMP, 'Hello mqtt')
+				console.log('Node Server has subscribed to ', TOPIC_VALIDATION);
+			}
+		})
 	})
 
 	//================================================================
@@ -110,43 +118,64 @@ async function v0(){
 	// => C'est cette fonction qui alimente la BD !
 	//
 	client_mqtt.on('message', function (topic, message) {
-	    console.log("\nMQTT msg on topic : ", topic.toString());
-	    console.log("Msg payload : ", message.toString());
 
-	    // Parsing du message suppos� recu au format JSON
-	    message = JSON.parse(message);
-	    wh = message.who
-	    val = message.value
-
-	    // Debug : Gerer une liste de who pour savoir qui utilise le node server	
-	    let wholist = []
-	    var index = wholist.findIndex(x => x.who==wh)
-	    if (index === -1){
-		wholist.push({who:wh});	    
-	    }
-	    console.log("wholist using the node server :", wholist);
-
-	    // Mise en forme de la donnee � stocker => dictionnaire
-	    // Le format de la date est iomportant => compatible avec le
-	    // parsing qui sera realise par hightcharts dans l'UI
-	    // cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
-	    // vs https://jsfiddle.net/BlackLabel/tgahn7yv
-	    // var frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
-	    var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
-	    var new_entry = { date: frTime, // timestamp the value 
-			      who: wh,      // identify ESP who provide 
-			      value: val    // this value
-			    };
+		console.log(message.toString())
+		console.log(topic.toString())
+		switch(topic.toString()) {
+			case TOPIC_VALIDATION :
+				message = JSON.parse(message);
+				if(dbo.collection('esps').find({ "ident": message.ident }).count() == 0) {
+					dbo.collection('esps').insertOne({surname :'',ident :message.ident})
+				}
+				if (message.status && message.info){
+					var time = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
+					var new_data_entry = { 
+						date: time,
+						status: message.status,
+						info: message.info
+					};
+					dbo.collection('M1Miage2022').insertOne(new_data_entry)
+				}
+				console.log("Nouveau message sur le topic Validation: ", message);
+			break
+			case TOPIC_LIGHT :
+				// Parsing du message suppos� recu au format JSON
+				message = JSON.parse(message);
+				wh = message.who
+				val = message.value
+		
+				// Debug : Gerer une liste de who pour savoir qui utilise le node server	
+				let wholist = []
+				var index = wholist.findIndex(x => x.who==wh)
+				if (index === -1){
+				wholist.push({who:wh});	    
+				}
+				console.log("wholist using the node server :", wholist);
+		
+				// Mise en forme de la donnee � stocker => dictionnaire
+				// Le format de la date est iomportant => compatible avec le
+				// parsing qui sera realise par hightcharts dans l'UI
+				// cf https://www.w3schools.com/jsref/tryit.asp?filename=tryjsref_tolocalestring_date_all
+				// vs https://jsfiddle.net/BlackLabel/tgahn7yv
+				// var frTime = new Date().toLocaleString("fr-FR", {timeZone: "Europe/Paris"});
+				var frTime = new Date().toLocaleString("sv-SE", {timeZone: "Europe/Paris"});
+				var new_entry = { date: frTime, // timestamp the value 
+						  who: wh,      // identify ESP who provide 
+						  value: val    // this value
+						};
+				
+				// On recupere le nom basique du topic du message
+				var key = path.parse(topic.toString()).base;
+				// Stocker le dictionnaire qui vient d'etre cr�� dans la BD
+				// en utilisant le nom du topic comme key de collection
+				dbo.collection(key).insertOne(new_entry, function(err, res) {
+				if (err) throw err;
+				console.log("\nItem : ", new_entry, 
+				"\ninserted in db in collection :", key);
+				});
+			break
+		}
 	    
-	    // On recupere le nom basique du topic du message
-	    var key = path.parse(topic.toString()).base;
-	    // Stocker le dictionnaire qui vient d'etre cr�� dans la BD
-	    // en utilisant le nom du topic comme key de collection
-	    dbo.collection(key).insertOne(new_entry, function(err, res) {
-		if (err) throw err;
-		console.log("\nItem : ", new_entry, 
-		"\ninserted in db in collection :", key);
-	    });
 
 	    // Debug : voir les collections de la DB 
 	    //dbo.listCollections().toArray(function(err, collInfos) {
@@ -201,6 +230,58 @@ app.use(function(request, response, next) { //Pour eviter les problemes de CORS/
 // Route / => Le node renvoie la page HTML affichant les charts
 app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname + '/ui_lucioles.html'));
+});
+
+app.get('/espsConfig', function (req, res) {
+    res.sendFile(path.join(__dirname + '/ui_lucioles_params.html'));
+});
+
+app.get('/map', function (req, res) {
+    res.sendFile(path.join(__dirname + '/ui_lucioles_map.html'));
+});
+
+app.get('/esps',function (req, res) {
+	dbo.collection('esps').find({}).toArray(function(err, result) {
+		//if (err) throw err;
+		console.log(result);
+		res.json({result})
+	  })
+})
+
+app.get('/M1Miage2022',function (req, res) {
+	dbo.collection('M1Miage2022').aggregate([
+		{
+			$sort: { "date": 1 }
+		},
+		{
+		    
+			$group : { _id: "$info.ident" ,loc : { "$first" : "$info.loc"}, temperature : { "$first" : "$status.temperature"}}
+		}
+	]).toArray(function(err, result) {
+		let filtred = result.filter(esp => {
+			if(esp.hasOwnProperty('loc')) {
+				if(esp.loc != null && esp.loc.hasOwnProperty('lat') && esp.loc.hasOwnProperty('lgn')) {
+					return true
+				}
+			} else {
+				return false
+			}
+	  })
+	  res.json({filtred})
+	})
+})
+
+app.put('/esps/:id', function (req, res) {
+	console.log(req.body)
+	if(req.body.surname) {
+    	dbo.collection('esps').updateOne({'_id':ObjectId(req.params.id)}, {$set : {surname : req.body.surname}},function(err, resu) {
+			console.log(resu)
+			res.json({message : "ok"})
+		  })
+	} else {
+		res.json({message : 'erreur'})
+	}
+	
 });
 
 

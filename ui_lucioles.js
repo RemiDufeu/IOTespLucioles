@@ -6,7 +6,7 @@
 //
 
 async function init() {
-
+    topBar()
     //=== Initialisation des traces/charts de la page html ===
     // Apply time settings globally
     Highcharts.setOptions({
@@ -101,7 +101,7 @@ function get_samples(path_on_node, serie, wh){
     // serie => for choosing chart/serie on the page
     // wh => which esp do we want to query data
     
-    const node_url = 'https://espluciolesremi.herokuapp.com'
+    const node_url = 'https://dashboard.heroku.com/'
 
     //https://openclassrooms.com/fr/courses/1567926-un-site-web-dynamique-avec-jquery/1569648-le-fonctionnement-de-ajax
     $.ajax({
