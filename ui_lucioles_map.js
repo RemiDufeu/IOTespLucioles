@@ -9,7 +9,9 @@ const node_url = 'https://dashboard.heroku.com/'
 async function init() {
     topBar()
 
-    const espdata = await fetch(node_url+'M1Miage2022').then(res => res.json()).then(res => res.filtred)
+    const espdata = await fetch(node_url+'M1Miage2022',{headers : {
+        'Access-Control-Allow-Origin': '*'
+    }}).then(res => res.json()).then(res => res.filtred)
 
     
     var map = L.map('map').setView([20, 0], 3);

@@ -8,7 +8,9 @@ async function init() {
 const buildList = async () => {
     const container = document.querySelector('.containerList')
 
-    const esp = await fetch(node_url+'esps').then(res => res.json()).then(res => res.result)
+    const esp = await fetch(node_url+'esps',{headers : {
+        'Access-Control-Allow-Origin': '*'
+    }}).then(res => res.json()).then(res => res.result)
 
     esp.forEach(element => {
         let div = document.createElement('div')

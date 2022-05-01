@@ -1,6 +1,7 @@
 // Importation des modules
 var path = require('path');
 const fs = require('fs');
+const cors = require('cors')
 
 //charger le mdp en fichier .env
 require('dotenv').config()
@@ -214,6 +215,7 @@ const app = express();
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(bodyParser.json())
+app.use(cors())
 app.use(express.static(path.join(__dirname, '/')));
 app.use(function(request, response, next) { //Pour eviter les problemes de CORS/REST
     response.header("Access-Control-Allow-Origin", "*");
