@@ -6,3 +6,4 @@ Pour déployer via docker
 3. push l'image : docker push registry.heroku.com/'nom de l'app heroku'/web
 4. réaliser la release : heroku container:release web -a 'nom de l'app heroku'
 
+

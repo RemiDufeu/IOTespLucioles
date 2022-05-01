@@ -4,7 +4,7 @@
 // Auteur : G.MENEZ
 // RMQ : Manipulation naive (debutant) de Javascript
 //
-const node_url = 'https://dashboard.heroku.com/'
+const node_url = 'https://iotdr008319m1.herokuapp.com/'
 
 async function init() {
     topBar()
